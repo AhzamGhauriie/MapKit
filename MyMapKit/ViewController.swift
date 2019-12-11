@@ -11,12 +11,14 @@ import MapKit
 import CoreLocation
 class ViewController: UIViewController {
     
- 
+  
     @IBOutlet weak var addressLable: UILabel!
     @IBOutlet weak var mapView: MKMapView!
     let locationManager = CLLocationManager()
     let regionInMeters:Double = 1000
     var previouslocation:CLLocation?
+    let geoCoder = CLGeocoder()
+    var directionsArray:[MKDirections] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -55,9 +57,102 @@ class ViewController: UIViewController {
             break
         case.authorizedAlways:
             break
-     
+            
         }
     }
+    func getDirection(){
+        guard let location = locationManager.location?.coordinate else{
+            return
+        }
+        let request = creatDirectionRequest(from: location)
+        let direction = MKDirections(request: request)
+        resetMapView(withNew: direction)
+        direction.calculate{[unowned self] (response, error)in
+            guard let response = response else { return }
+            for route in response.routes{
+                let steps = route.steps
+                self.mapView.addOverlay(route.polyline)
+                self.mapView.setVisibleMapRect(route.polyline.boundingMapRect, animated: true)
+            }
+        }
+    }
+    func creatDirectionRequest(from coordinate: CLLocationCoordinate2D) -> MKDirections.Request{
+        let destinationCoordinate = getCenterLocation(for: mapView).coordinate
+        let startingLocation = MKPlacemark(coordinate: coordinate)
+        let destination = MKPlacemark(coordinate: destinationCoordinate)
+        
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: startingLocation)
+        request.destination = MKMapItem(placemark: destination)
+        request.transportType = .automobile
+        request.requestsAlternateRoutes = true
+        return request
+    }
+    func resetMapView(withNew directions: MKDirections){
+        mapView.removeOverlays(mapView.overlays)
+        directionsArray.append(directions)
+        let _ = directionsArray.map { $0.cancel()}
+        }
+    
+ 
+        @IBAction func btnShow(_ sender: UIButton) {
+            
+          //  let loc = getCenterLocation(for: mapView)
+           
+            
+            guard let lat = locationManager.location?.coordinate.latitude else {
+                return
+            }
+            guard let long = locationManager.location?.coordinate.longitude else {
+                          return
+                      }
+            
+            self.getminutesfromorgin(currentlat: lat, currentlng: long)
+            
+    }
+    
+           func getminutesfromorgin(currentlat:Double,currentlng:Double)  {
+             let coordinate₀ = CLLocation(latitude: currentlat, longitude: currentlng)
+                   let coordinate₁ = CLLocation(latitude: 24.8825, longitude: 67.0694 )
+                    let distanceInMeters = coordinate₀.distance(from: coordinate₁)
+
+                  print(distanceInMeters)
+            
+            if distanceInMeters < 1000{
+              let geoCoder = CLGeocoder()
+
+                geoCoder.cancelGeocode()
+                geoCoder.reverseGeocodeLocation(coordinate₁){ [weak self](placemarks,error) in
+                    guard let self = self else{ return }
+                    if let _ = error {
+                        return
+                    }
+                    guard let placemark = placemarks?.first else{
+                        return
+                    }
+                    let streetNumber = placemark.subThoroughfare ?? ""
+                    let streetName = placemark.thoroughfare ?? ""
+                    
+                    DispatchQueue.main.async {
+//                        self.addressLable.text = "\(streetNumber) \(streetName)"
+                      print("\(streetNumber) \(streetName)")
+                        
+                    }
+                }
+                
+                
+            }
+            
+            
+    }
+    
+    
+    
+    
+    @IBAction func goBtn(_ sender: UIButton) {
+        getDirection()
+    }
+    
     func startTrackingUserLocation() {
         mapView.showsUserLocation = true
         centerViewOnUserLocation()
@@ -83,6 +178,7 @@ extension ViewController:MKMapViewDelegate{
         guard center.distance(from: previouslocation) > 50 else {return}
         self.previouslocation = center
         
+        geoCoder.cancelGeocode()
         geoCoder.reverseGeocodeLocation(center){ [weak self](placemarks,error) in
             guard let self = self else{ return }
             if let _ = error {
@@ -96,10 +192,20 @@ extension ViewController:MKMapViewDelegate{
             
             DispatchQueue.main.async {
                 self.addressLable.text = "\(streetNumber) \(streetName)"
-              
+                
                 
             }
         }
         
+    }
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer{
+        let renderer = MKPolylineRenderer(overlay: overlay as! MKPolyline)
+        renderer.strokeColor = .red
+        return renderer
+    }
+    
+//    func createAlert(title:String,message:String){
+//        let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertViewStyle.default)
+//        alert.addAction
     }
 }
