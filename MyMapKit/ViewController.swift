@@ -9,9 +9,20 @@
 import UIKit
 import MapKit
 import CoreLocation
+
 class ViewController: UIViewController {
     
-    
+    var equipments = [[String:Any]]()
+
+    var address:[[String:Any]] = [
+    ["address name":"Bahadurabad","Latitute":24.8825,"long":67.0694],
+    ["address name":"Johar","Latitute":24.9204,"long":67.1344],
+    ["address name":"PIB Colony","Latitute":24.8942,"long":67.0539],
+    ["address name":"Nazimabad","Latitute":24.9107,"long":67.0311],
+    ["address name":"New Town","Latitute":24.9999,"long":67.0648],
+   ["address name":"Liaquat National Hospital","Latitute":24.871641,"long":67.059906],
+     ["address name":"SadaBahar Hotel","Latitute":24.8237,"long":66.9791]]
+  
     @IBOutlet weak var addressLable: UILabel!
     @IBOutlet weak var mapView: MKMapView!
     let locationManager = CLLocationManager()
@@ -19,11 +30,11 @@ class ViewController: UIViewController {
     var previouslocation:CLLocation?
     let geoCoder = CLGeocoder()
     var directionsArray:[MKDirections] = []
-    
+   
     override func viewDidLoad() {
         super.viewDidLoad()
         checkLocationServices()
-        
+  
     }
     
     func setupLocationManager(){
@@ -95,6 +106,7 @@ class ViewController: UIViewController {
         directionsArray.append(directions)
         
         let _ = directionsArray.map { $0.cancel()}
+        
     }
     
     
@@ -102,20 +114,86 @@ class ViewController: UIViewController {
         
         //  let loc = getCenterLocation(for: mapView)
        // createAlert(title: "ABC", message: "")
+       // self.mapView.removeAnnotation(self.annotation)
         
-        guard let lat = locationManager.location?.coordinate.latitude else {
+        equipments.removeAll()
+        guard let latitute = locationManager.location?.coordinate.latitude else {
             return
         }
         guard let long = locationManager.location?.coordinate.longitude else {
             return
         }
+        for add in address{
+            let lat = add["Latitute"]
+            let lng = add["long"]
+            let adds = add["address name"]
+            
+            let getdistance = self.getdistance(currentlat: latitute, currentlong: long, diclat: lat as! Double, diclong: lng as! Double)
+            
+          
+            print(getdistance)
+            
+            if getdistance < 2000 {
+                equipments.append(add)
+                self.addPin(lat: lat as! Double, long: lng as! Double, title: adds as! String)
+                
+                
+                
+            }
+            
+        }
         
-        self.getminutesfromorgin(currentlat: lat, currentlng: long)
+              print(equipments)
+
     }
     
+     func addPin(lat:Double,long:Double,title:String) {
+
+        let annotation = MKPointAnnotation()
+
+          // self.mapView.removeAnnotation(self.annotation)
+
+           let centerCoordinate = CLLocationCoordinate2D(latitude: lat, longitude:long)
+
+           annotation.coordinate = centerCoordinate
+
+           annotation.title = title
+
+           self.mapView.addAnnotation(annotation)
+
+       }
+    
+    
+    
+    
+    func getdistance(currentlat:Double,currentlong:Double,diclat:Double,diclong:Double)->Double {
+
+        
+
+        let coordinate₀ = CLLocation(latitude: currentlat, longitude: currentlong)
+
+        
+
+        let coordinate₁ = CLLocation(latitude:diclat, longitude: diclong )
+
+        
+
+        let distanceInMeters = coordinate₀.distance(from: coordinate₁)
+
+        
+
+        return distanceInMeters
+
+        
+
+    }
     func getminutesfromorgin(currentlat:Double,currentlng:Double)  {
         let coordinate₀ = CLLocation(latitude: currentlat, longitude: currentlng)
         let coordinate₁ = CLLocation(latitude:44.2312, longitude: 76.4860 )
+//        let sourcePin = customPin(pinTitle: "Kansas Citgzgy", pinSubTitle: "", location: sourceLocation)
+//               let destinationPin = customPin(pinTitle: "St. Louicbs", pinSubTitle: "", location: destinationLocation)
+//               self.mapView.addAnnotation(sourcePin)
+//               self.mapView.addAnnotation(destinationPin)
         let distanceInMeters = coordinate₀.distance(from: coordinate₁)
 //        let speed:Double = 20 // m/s
 //        let time = distanceInMeters/speed
@@ -207,7 +285,7 @@ extension ViewController:MKMapViewDelegate{
     }
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer{
         let renderer = MKPolylineRenderer(overlay: overlay as! MKPolyline)
-        renderer.strokeColor = .black
+        renderer.strokeColor = .systemBlue
         renderer.lineWidth = 3
         return renderer
     }
