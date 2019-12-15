@@ -15,6 +15,7 @@ class ViewController: UIViewController {
     var equipments = [[String:Any]]()
     var address:[[String:Any]] = [
         ["address name":"Bahadurabad","Latitute":24.8825,"long":67.0694],
+        ["address name":"SaintJames","Latitute":51.5072,"long":-0.1353],
         ["address name":"Johar","Latitute":24.9204,"long":67.1344],
         ["address name":"PIB Colony","Latitute":24.8942,"long":67.0539],
         ["address name":"Nazimabad","Latitute":24.9107,"long":67.0311],
@@ -131,7 +132,7 @@ class ViewController: UIViewController {
             let lng = add["long"]
             let adds = add["address name"]
       
-            let getdistance = self.getdistance(currentlat: self.latt, currentlong: self.longg, diclat: lat as! Double, diclong: lng as! Double)
+            let getdistance = self.getdistance(currentlat: latt, currentlong: longg, diclat: lat as! Double, diclong: lng as! Double)
            print(getdistance)
             
             if getdistance < 2000 {
@@ -194,9 +195,13 @@ func getminutesfromorgin(currentlat:Double,currentlng:Double)  {
     @IBAction func goBtn(_ sender: UIButton) {
         getDirection()
     }
+    
+    @IBAction func centerbtn(_ sender: UIButton) {
+        centerViewOnUserLocation()
+    }
     func startTrackingUserLocation() {
         mapView.showsUserLocation = true
-        centerViewOnUserLocation()
+           centerViewOnUserLocation()
         locationManager.startUpdatingLocation()
         previouslocation = getCenterLocation(for: mapView)
     }
