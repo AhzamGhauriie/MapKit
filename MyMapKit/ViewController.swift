@@ -11,30 +11,30 @@ import MapKit
 import CoreLocation
 
 class ViewController: UIViewController {
-    
+     var annotationArray = [MKAnnotation]()
     var equipments = [[String:Any]]()
-
     var address:[[String:Any]] = [
-    ["address name":"Bahadurabad","Latitute":24.8825,"long":67.0694],
-    ["address name":"Johar","Latitute":24.9204,"long":67.1344],
-    ["address name":"PIB Colony","Latitute":24.8942,"long":67.0539],
-    ["address name":"Nazimabad","Latitute":24.9107,"long":67.0311],
-    ["address name":"New Town","Latitute":24.9999,"long":67.0648],
-   ["address name":"Liaquat National Hospital","Latitute":24.871641,"long":67.059906],
-     ["address name":"SadaBahar Hotel","Latitute":24.8237,"long":66.9791]]
-  
+        ["address name":"Bahadurabad","Latitute":24.8825,"long":67.0694],
+        ["address name":"Johar","Latitute":24.9204,"long":67.1344],
+        ["address name":"PIB Colony","Latitute":24.8942,"long":67.0539],
+        ["address name":"Nazimabad","Latitute":24.9107,"long":67.0311],
+        ["address name":"New Town","Latitute":24.9999,"long":67.0648],
+        ["address name":"Tariq Road","Latitute":24.871641,"long":67.059906],
+        ["address name":"Sada-Bahar Hotel","Latitute":24.8237,"long":66.9791]]
+    let myorigin = getminutesfromorgin
     @IBOutlet weak var addressLable: UILabel!
     @IBOutlet weak var mapView: MKMapView!
+    var latt = 0.0
+    var longg = 0.0
     let locationManager = CLLocationManager()
-    let regionInMeters:Double = 1000
+    let regionInMeters:Double = 1500
     var previouslocation:CLLocation?
     let geoCoder = CLGeocoder()
     var directionsArray:[MKDirections] = []
-   
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         checkLocationServices()
-  
     }
     
     func setupLocationManager(){
@@ -70,7 +70,6 @@ class ViewController: UIViewController {
             break
         case.authorizedAlways:
             break
-            
         }
     }
     func getDirection(){
@@ -108,15 +107,19 @@ class ViewController: UIViewController {
         let _ = directionsArray.map { $0.cancel()}
         
     }
-    
-    
+     
     @IBAction func btnShow(_ sender: UIButton) {
         
         //  let loc = getCenterLocation(for: mapView)
-       // createAlert(title: "ABC", message: "")
-       // self.mapView.removeAnnotation(self.annotation)
-        
+        // createAlert(title: "ABC", message: "")
+        //self.mapView.removeAnnotation(annotation)
+
         equipments.removeAll()
+        
+        
+        self.mapView.removeAnnotations(self.annotationArray)
+      self.annotationArray.removeAll()
+        
         guard let latitute = locationManager.location?.coordinate.latitude else {
             return
         }
@@ -127,86 +130,47 @@ class ViewController: UIViewController {
             let lat = add["Latitute"]
             let lng = add["long"]
             let adds = add["address name"]
-            
-            let getdistance = self.getdistance(currentlat: latitute, currentlong: long, diclat: lat as! Double, diclong: lng as! Double)
-            
-          
-            print(getdistance)
+      
+            let getdistance = self.getdistance(currentlat: self.latt, currentlong: self.longg, diclat: lat as! Double, diclong: lng as! Double)
+           print(getdistance)
             
             if getdistance < 2000 {
                 equipments.append(add)
                 self.addPin(lat: lat as! Double, long: lng as! Double, title: adds as! String)
-                
-                
-                
-            }
-            
+         }
         }
-        
-              print(equipments)
-
+        print(equipments)
     }
     
-     func addPin(lat:Double,long:Double,title:String) {
-
+    func addPin(lat:Double,long:Double,title:String) {
+        
         let annotation = MKPointAnnotation()
-
-          // self.mapView.removeAnnotation(self.annotation)
-
-           let centerCoordinate = CLLocationCoordinate2D(latitude: lat, longitude:long)
-
-           annotation.coordinate = centerCoordinate
-
-           annotation.title = title
-
-           self.mapView.addAnnotation(annotation)
-
-       }
-    
-    
-    
-    
-    func getdistance(currentlat:Double,currentlong:Double,diclat:Double,diclong:Double)->Double {
-
+       
+        self.annotationArray.append(annotation)
+      let centerCoordinate = CLLocationCoordinate2D(latitude: lat, longitude:long)
+        annotation.coordinate = centerCoordinate
+        annotation.title = title
         
-
-        let coordinate₀ = CLLocation(latitude: currentlat, longitude: currentlong)
-
+        self.mapView.addAnnotations(self.annotationArray)
+     
         
-
-        let coordinate₁ = CLLocation(latitude:diclat, longitude: diclong )
-
-        
-
-        let distanceInMeters = coordinate₀.distance(from: coordinate₁)
-
-        
-
-        return distanceInMeters
-
-        
-
     }
-    func getminutesfromorgin(currentlat:Double,currentlng:Double)  {
+     
+    func getdistance(currentlat:Double,currentlong:Double,diclat:Double,diclong:Double)->Double {
+        
+        let coordinate₀ = CLLocation(latitude: currentlat, longitude: currentlong)
+        let coordinate₁ = CLLocation(latitude:diclat, longitude: diclong )
+        let distanceInMeters = coordinate₀.distance(from: coordinate₁)
+        return distanceInMeters
+    }
+
+func getminutesfromorgin(currentlat:Double,currentlng:Double)  {
         let coordinate₀ = CLLocation(latitude: currentlat, longitude: currentlng)
         let coordinate₁ = CLLocation(latitude:44.2312, longitude: 76.4860 )
-//        let sourcePin = customPin(pinTitle: "Kansas Citgzgy", pinSubTitle: "", location: sourceLocation)
-//               let destinationPin = customPin(pinTitle: "St. Louicbs", pinSubTitle: "", location: destinationLocation)
-//               self.mapView.addAnnotation(sourcePin)
-//               self.mapView.addAnnotation(destinationPin)
-        let distanceInMeters = coordinate₀.distance(from: coordinate₁)
-//        let speed:Double = 20 // m/s
-//        let time = distanceInMeters/speed
-//        var mints =  2 * round(time/60.0)
-//          if mints == 0 {
-//
-//             mints = mints + 5
-//
-//          }
-//
-//         print("time is \(time/60.0)")
+       let distanceInMeters = coordinate₀.distance(from: coordinate₁)
+      
         print(distanceInMeters)
-        if distanceInMeters < 100000000{
+        if distanceInMeters < 00{
             
             let geoCoder = CLGeocoder()
             
@@ -226,6 +190,7 @@ class ViewController: UIViewController {
                     self.createAlert(title: "", message: "",address: mix)
                     //  self.addressLable.text = "\(streetNumber) \(streetName)"
                 }}}}
+
     @IBAction func goBtn(_ sender: UIButton) {
         getDirection()
     }
@@ -235,9 +200,12 @@ class ViewController: UIViewController {
         locationManager.startUpdatingLocation()
         previouslocation = getCenterLocation(for: mapView)
     }
+    
     func getCenterLocation(for mapView: MKMapView) -> CLLocation{
         let latitude = mapView.centerCoordinate.latitude
         let longitude = mapView.centerCoordinate.longitude
+        self.latt = latitude
+        self.longg = longitude
         return CLLocation(latitude: latitude, longitude: longitude)
     }
 }
@@ -251,7 +219,7 @@ extension ViewController:MKMapViewDelegate{
         let center = getCenterLocation(for: mapView)
         let geoCoder = CLGeocoder()
         guard let previouslocation = self.previouslocation else{ return }
-        guard center.distance(from: previouslocation) > 50 else {return}
+        guard center.distance(from: previouslocation) > 00 else {return}
         self.previouslocation = center
         
         geoCoder.cancelGeocode()
@@ -274,18 +242,17 @@ extension ViewController:MKMapViewDelegate{
     func createAlert(title:String,message:String,address:String){
         
         let alertController = UIAlertController(title: "Nearby Restuarant",message: address,preferredStyle: .alert)
-        
         let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
         alertController.addAction(okAction)
         let cancleAction = UIAlertAction(title: "Cancle", style: .default, handler: nil)
-               alertController.addAction(cancleAction)
-        
-   
+        alertController.addAction(cancleAction)
+
         self.present(alertController, animated: true, completion: nil)
     }
+    
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer{
         let renderer = MKPolylineRenderer(overlay: overlay as! MKPolyline)
-        renderer.strokeColor = .systemBlue
+        renderer.strokeColor = .white
         renderer.lineWidth = 3
         return renderer
     }
